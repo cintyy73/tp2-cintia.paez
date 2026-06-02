@@ -1,0 +1,20 @@
+# Archivos compilados de Java
+bin/
+*.class
+
+# Archivos generados por la aplicacion
+sistema_resultado.json
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse
+.project
+.classpath
+.settings/
