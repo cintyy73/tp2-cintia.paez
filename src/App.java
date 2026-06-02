@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.time.LocalDate;
 
 import excepciones.AlumnoDuplicadoException;
@@ -11,6 +12,7 @@ import excepciones.SistemaException;
 import modelo.Alumno;
 import modelo.Profesor;
 import modelo.Sistema;
+import persistencia.GestorJson;
 
 public class App {
 
@@ -32,6 +34,7 @@ public class App {
         mostrarEstadoSistema(sistema);
         demostrarManejoDeErrores(sistema);
         mostrarEstadoSistema(sistema);
+        demostrarPersistenciaJson(sistema);
 
         encabezado("FIN DE LA EJECUCION");
     }
@@ -176,6 +179,58 @@ public class App {
         } catch (SistemaException e) {
             System.out.println("   [INESPERADA] " + e.getMessage());
         }
+    }
+
+    // ---------------------------------------------------------------
+    // Persistencia: guardar y cargar JSON
+    // ---------------------------------------------------------------
+
+    private static void demostrarPersistenciaJson(Sistema sistema) {
+        seccion("Persistencia: guardar y cargar JSON");
+
+        String rutaSalida = "sistema_resultado.json";
+
+        // 1) Guardar
+        System.out.println("-> Guardando sistema en \"" + rutaSalida + "\"...");
+        try {
+            GestorJson.guardar(sistema, rutaSalida);
+            System.out.println("   [OK] Sistema guardado en \"" + rutaSalida + "\".");
+        } catch (IOException e) {
+            System.err.println("   [ERROR] No se pudo guardar: " + e.getMessage());
+            return;
+        }
+
+        // 2) Cargar el mismo archivo en un nuevo Sistema (demuestra roundtrip)
+        System.out.println();
+        System.out.println("-> Cargando sistema desde \"" + rutaSalida + "\"...");
+        Sistema sistemaCargado;
+        try {
+            sistemaCargado = GestorJson.cargar(rutaSalida);
+            System.out.println("   [OK] Sistema cargado correctamente.");
+        } catch (IOException e) {
+            System.err.println("   [ERROR] No se pudo leer el archivo: " + e.getMessage());
+            return;
+        } catch (SistemaException e) {
+            System.err.println("   [ERROR] Contenido invalido: " + e.getMessage());
+            return;
+        }
+
+        // 3) Mostrar el sistema cargado
+        System.out.println();
+        System.out.println("Sistema cargado desde archivo:");
+        System.out.println("  Nombre:         " + sistemaCargado.getNombre());
+        System.out.println("  Fecha creacion: " + sistemaCargado.getFechaCreacion());
+        System.out.println("  Profesores:     " + sistemaCargado.listarProfesores().size()
+                + " / " + Sistema.MAX_PROFESORES);
+        System.out.println("  Alumnos total:  " + sistemaCargado.obtenerCantidadTotalAlumnos());
+
+        // 4) Verificar roundtrip
+        boolean coincide = sistema.getNombre().equals(sistemaCargado.getNombre())
+                && sistema.getFechaCreacion().equals(sistemaCargado.getFechaCreacion())
+                && sistema.listarProfesores().size() == sistemaCargado.listarProfesores().size()
+                && sistema.obtenerCantidadTotalAlumnos() == sistemaCargado.obtenerCantidadTotalAlumnos();
+        System.out.println();
+        System.out.println("  Roundtrip (guardar -> cargar) consistente: " + (coincide ? "SI" : "NO"));
     }
 
     // ---------------------------------------------------------------
