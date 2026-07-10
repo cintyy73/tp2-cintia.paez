@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +18,8 @@ import excepciones.DatoInvalidoException;
 import excepciones.LimiteProfesoresException;
 import excepciones.ProfesorDuplicadoException;
 import excepciones.ProfesorNoEncontradoException;
+import modelo.Alumno;
+import modelo.Profesor;
 import modelo.Sistema;
 
 class SistemaTest {
@@ -131,5 +136,84 @@ class SistemaTest {
     void obtenerProfesorInexistenteLanzaExcepcion() {
         assertThrows(ProfesorNoEncontradoException.class,
                 () -> sistema.obtenerProfesor(99));
+    }
+
+    // ---------------------------------------------------------------
+    // Consultas y reportes (Streams + Maps)
+    // ---------------------------------------------------------------
+
+    /** Arma un escenario con 3 profesores y varios alumnos para los reportes. */
+    private void cargarEscenario() throws Exception {
+        sistema.registrarProfesor(1, "Ana", "Matematica");
+        sistema.registrarProfesor(2, "Luis", "Historia");
+        sistema.registrarProfesor(3, "Marta", "Matematica");
+        sistema.agregarAlumnoAProfesor(1, 101, "Juan", "1 Anio");
+        sistema.agregarAlumnoAProfesor(1, 102, "Sofia", "1 Anio");
+        sistema.agregarAlumnoAProfesor(1, 103, "Pablo", "2 Anio");
+        sistema.agregarAlumnoAProfesor(2, 201, "Lucia", "2 Anio");
+    }
+
+    @Test
+    @DisplayName("buscarProfesoresPorMateria devuelve todos los que dictan esa materia")
+    void buscarProfesoresPorMateriaFunciona() throws Exception {
+        cargarEscenario();
+        List<Profesor> mate = sistema.buscarProfesoresPorMateria("Matematica");
+        assertEquals(2, mate.size());
+    }
+
+    @Test
+    @DisplayName("buscarProfesoresPorMateria no distingue mayusculas/minusculas")
+    void buscarProfesoresPorMateriaIgnoraMayusculas() throws Exception {
+        cargarEscenario();
+        assertEquals(1, sistema.buscarProfesoresPorMateria("historia").size());
+    }
+
+    @Test
+    @DisplayName("buscarProfesoresPorMateria con materia inexistente devuelve lista vacia")
+    void buscarProfesoresPorMateriaInexistenteDevuelveVacio() throws Exception {
+        cargarEscenario();
+        assertTrue(sistema.buscarProfesoresPorMateria("Quimica").isEmpty());
+    }
+
+    @Test
+    @DisplayName("profesorConMasAlumnos devuelve el profesor con mayor cantidad")
+    void profesorConMasAlumnosFunciona() throws Exception {
+        cargarEscenario();
+        Optional<Profesor> top = sistema.profesorConMasAlumnos();
+        assertTrue(top.isPresent());
+        assertEquals(1, top.get().getId());
+    }
+
+    @Test
+    @DisplayName("profesorConMasAlumnos sin profesores devuelve Optional vacio")
+    void profesorConMasAlumnosSinProfesoresEsVacio() {
+        assertFalse(sistema.profesorConMasAlumnos().isPresent());
+    }
+
+    @Test
+    @DisplayName("listarTodosLosAlumnos aplana los alumnos de todos los profesores")
+    void listarTodosLosAlumnosFunciona() throws Exception {
+        cargarEscenario();
+        List<Alumno> todos = sistema.listarTodosLosAlumnos();
+        assertEquals(4, todos.size());
+    }
+
+    @Test
+    @DisplayName("agruparAlumnosPorCurso agrupa por grado/curso")
+    void agruparAlumnosPorCursoFunciona() throws Exception {
+        cargarEscenario();
+        Map<String, List<Alumno>> porCurso = sistema.agruparAlumnosPorCurso();
+        assertEquals(2, porCurso.size());
+        assertEquals(2, porCurso.get("1 Anio").size());
+        assertEquals(2, porCurso.get("2 Anio").size());
+    }
+
+    @Test
+    @DisplayName("contarAlumnosPorCurso cuenta los alumnos de cada curso")
+    void contarAlumnosPorCursoFunciona() throws Exception {
+        cargarEscenario();
+        Map<String, Long> conteo = sistema.contarAlumnosPorCurso();
+        assertEquals(2L, conteo.get("1 Anio"));
+        assertEquals(2L, conteo.get("2 Anio"));
     }
 }
