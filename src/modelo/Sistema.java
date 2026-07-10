@@ -3,7 +3,12 @@ package modelo;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import excepciones.AlumnoDuplicadoException;
 import excepciones.AlumnoNoEncontradoException;
@@ -90,11 +95,70 @@ public class Sistema {
     }
 
     public int obtenerCantidadTotalAlumnos() {
-        int total = 0;
-        for (Profesor p : profesores) {
-            total += p.obtenerCantidadAlumnos();
+        // Streams: sumamos los alumnos de cada profesor en una sola expresion.
+        return profesores.stream()
+                .mapToInt(Profesor::obtenerCantidadAlumnos)
+                .sum();
+    }
+
+    // ===============================================================
+    // Consultas y reportes (expresiones lambda, Streams y Maps)
+    // ===============================================================
+
+    /**
+     * Devuelve los profesores que dictan una materia dada (sin distinguir
+     * mayusculas/minusculas). Ejemplo de filtro con lambda.
+     */
+    public List<Profesor> buscarProfesoresPorMateria(String materia) {
+        if (materia == null || materia.trim().isEmpty()) {
+            return Collections.emptyList();
         }
-        return total;
+        String criterio = materia.trim();
+        return profesores.stream()
+                .filter(p -> p.getMateria().equalsIgnoreCase(criterio))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Profesor con mayor cantidad de alumnos asignados. Devuelve un Optional
+     * vacio si todavia no hay profesores registrados.
+     */
+    public Optional<Profesor> profesorConMasAlumnos() {
+        return profesores.stream()
+                .max(Comparator.comparingInt(Profesor::obtenerCantidadAlumnos));
+    }
+
+    /**
+     * Todos los alumnos del sistema, sin importar a que profesor pertenecen.
+     * Ejemplo de flatMap (aplanar las listas de cada profesor en una sola).
+     */
+    public List<Alumno> listarTodosLosAlumnos() {
+        return profesores.stream()
+                .flatMap(p -> p.getAlumnos().stream())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Agrupa a todos los alumnos por su grado/curso.
+     * Ejemplo de Collectors.groupingBy -> Map<curso, lista de alumnos>.
+     */
+    public Map<String, List<Alumno>> agruparAlumnosPorCurso() {
+        return profesores.stream()
+                .flatMap(p -> p.getAlumnos().stream())
+                .collect(Collectors.groupingBy(Alumno::getGradoCurso));
+    }
+
+    /**
+     * Cantidad de alumnos por curso, ordenado alfabeticamente por curso.
+     * Ejemplo de groupingBy + counting con un TreeMap para mantener el orden.
+     */
+    public Map<String, Long> contarAlumnosPorCurso() {
+        return profesores.stream()
+                .flatMap(p -> p.getAlumnos().stream())
+                .collect(Collectors.groupingBy(
+                        Alumno::getGradoCurso,
+                        TreeMap::new,
+                        Collectors.counting()));
     }
 
     public Profesor obtenerProfesor(int idProfesor) throws ProfesorNoEncontradoException {
