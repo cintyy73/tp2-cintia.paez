@@ -95,7 +95,7 @@ public class Sistema {
     }
 
     public int obtenerCantidadTotalAlumnos() {
-        // Streams: sumamos los alumnos de cada profesor en una sola expresion.
+        // #LAMBDA 1
         return profesores.stream()
                 .mapToInt(Profesor::obtenerCantidadAlumnos)
                 .sum();
@@ -114,6 +114,7 @@ public class Sistema {
             return Collections.emptyList();
         }
         String criterio = materia.trim();
+        // #LAMBDA 2
         return profesores.stream()
                 .filter(p -> p.getMateria().equalsIgnoreCase(criterio))
                 .collect(Collectors.toList());
@@ -124,6 +125,7 @@ public class Sistema {
      * vacio si todavia no hay profesores registrados.
      */
     public Optional<Profesor> profesorConMasAlumnos() {
+        // #LAMBDA 3
         return profesores.stream()
                 .max(Comparator.comparingInt(Profesor::obtenerCantidadAlumnos));
     }
@@ -133,6 +135,7 @@ public class Sistema {
      * Ejemplo de flatMap (aplanar las listas de cada profesor en una sola).
      */
     public List<Alumno> listarTodosLosAlumnos() {
+        // #LAMBDA 4
         return profesores.stream()
                 .flatMap(p -> p.getAlumnos().stream())
                 .collect(Collectors.toList());
@@ -143,6 +146,7 @@ public class Sistema {
      * Ejemplo de Collectors.groupingBy -> Map<curso, lista de alumnos>.
      */
     public Map<String, List<Alumno>> agruparAlumnosPorCurso() {
+        // #LAMBDA 5
         return profesores.stream()
                 .flatMap(p -> p.getAlumnos().stream())
                 .collect(Collectors.groupingBy(Alumno::getGradoCurso));
@@ -153,6 +157,7 @@ public class Sistema {
      * Ejemplo de groupingBy + counting con un TreeMap para mantener el orden.
      */
     public Map<String, Long> contarAlumnosPorCurso() {
+        // #LAMBDA 6
         return profesores.stream()
                 .flatMap(p -> p.getAlumnos().stream())
                 .collect(Collectors.groupingBy(
