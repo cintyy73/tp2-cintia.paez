@@ -1,0 +1,40 @@
+{
+    "version": "2.0.0",
+    "options": {
+        "env": {
+            "JDK": "C:\\Users\\cinti\\.vscode\\extensions\\redhat.java-1.55.0-win32-x64\\jre\\21.0.11-win32-x86_64\\bin"
+        }
+    },
+    "tasks": [
+        {
+            "label": "run",
+            "detail": "Compila y ejecuta App.java (menu interactivo) con JDK 21.",
+            "type": "shell",
+            "command": "& \"$env:JDK\\javac.exe\" -d bin -cp \"lib/gson-2.10.1.jar\" -sourcepath src src/App.java; if ($?) { & \"$env:JDK\\java.exe\" -cp \"bin;lib/gson-2.10.1.jar\" App }",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "clear": true,
+                "focus": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "reset",
+            "detail": "Borra bin/, recompila todo y vuelve a correr los tests JUnit.",
+            "type": "shell",
+            "command": "if (Test-Path bin) { Remove-Item bin -Recurse -Force }; & \"$env:JDK\\javac.exe\" -d bin -cp \"lib/*\" -sourcepath src (Get-ChildItem -Recurse src -Filter *.java).FullName; if ($?) { & \"$env:JDK\\java.exe\" -jar \"lib/junit-platform-console-standalone-1.10.0.jar\" -cp \"bin;lib/gson-2.10.1.jar\" --scan-classpath bin }",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "clear": true,
+                "focus": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}
